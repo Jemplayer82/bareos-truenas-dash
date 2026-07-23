@@ -5,12 +5,12 @@ import bareos.exceptions
 
 
 class FakeConsole:
-    def __init__(self, responses: dict[str, dict[str, object]]):
+    def __init__(self, responses: dict[str, object]):
         self.responses = responses
         self.commands: list[str] = []
         self.closed = 0
 
-    def call(self, command: str) -> dict[str, object]:
+    def call(self, command: str) -> object:
         self.commands.append(command)
         return self.responses[command]
 
@@ -18,7 +18,7 @@ class FakeConsole:
         self.closed += 1
 
 
-def install(monkeypatch, responses: dict[str, dict[str, object]]):
+def install(monkeypatch, responses: dict[str, object]):
     fake = FakeConsole(responses)
     kwargs_seen: dict[str, object] = {}
     calls = {"count": 0}
@@ -66,6 +66,14 @@ def test_env_defaults(monkeypatch):
 def test_get_status(monkeypatch):
     fake, _, _ = install(monkeypatch, {"version": {"version": {"version": "23.0.4"}}})
     assert bareos_client.get_status() == {"connected": True, "version": "23.0.4"}
+    assert fake.commands == ["version"]
+    assert fake.closed == 1
+
+
+@pytest.mark.parametrize("bad_response", [None, "not-a-dict"])
+def test_get_status_normalizes_non_dict_console_response(monkeypatch, bad_response):
+    fake, _, _ = install(monkeypatch, {"version": bad_response})
+    assert bareos_client.get_status() == {"connected": True, "version": ""}
     assert fake.commands == ["version"]
     assert fake.closed == 1
 
@@ -181,11 +189,11 @@ def test_connection_error_maps(monkeypatch):
 
 def test_call_failure_maps(monkeypatch):
     class FailingFake(FakeConsole):
-        def __init__(self, responses: dict[str, dict[str, object]]):
+        def __init__(self, responses: dict[str, object]):
             super().__init__(responses)
             self.close_count = 0
 
-        def call(self, command: str) -> dict[str, object]:
+        def call(self, command: str) -> object:
             raise bareos.exceptions.ConnectionLostError("lost")
 
         def close(self) -> None:
