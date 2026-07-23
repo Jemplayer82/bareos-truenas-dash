@@ -355,6 +355,7 @@ def test_run_valueerror_maps_to_unknown_job(client, monkeypatch):
 
 from pathlib import Path
 import re
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -390,8 +391,11 @@ def test_index_external_refs_google_fonts_only():
     html = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
     urls = re.findall(r'https?://[^\s"\'<>]+', html)
     assert urls
+    allowed_hosts = {"fonts.googleapis.com", "fonts.gstatic.com"}
     for url in urls:
-        assert url.startswith("https://fonts.googleapis.com") or url.startswith("https://fonts.gstatic.com")
+        parsed = urlparse(url)
+        assert parsed.scheme == "https", f"external refs must use HTTPS: {url}"
+        assert parsed.netloc in allowed_hosts, f"disallowed external host: {url}"
 
 
 def test_style_css_palette_and_self_contained():
