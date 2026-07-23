@@ -8,13 +8,14 @@ class FakeConsole:
     def __init__(self, responses: dict[str, dict[str, object]]):
         self.responses = responses
         self.commands: list[str] = []
+        self.closed = 0
 
     def call(self, command: str) -> dict[str, object]:
         self.commands.append(command)
         return self.responses[command]
 
     def close(self) -> None:
-        pass
+        self.closed += 1
 
 
 def install(monkeypatch, responses: dict[str, dict[str, object]]):
@@ -66,6 +67,7 @@ def test_get_status(monkeypatch):
     fake, _, _ = install(monkeypatch, {"version": {"version": {"version": "23.0.4"}}})
     assert bareos_client.get_status() == {"connected": True, "version": "23.0.4"}
     assert fake.commands == ["version"]
+    assert fake.closed == 1
 
 
 def test_list_defined_jobs_sorted(monkeypatch):
@@ -74,6 +76,7 @@ def test_list_defined_jobs_sorted(monkeypatch):
         {".jobs": {"jobs": [{"name": "Nightly"}, {"name": "Catalog"}]}},
     )
     assert bareos_client.list_defined_jobs() == ["Catalog", "Nightly"]
+    assert fake.closed == 1
 
 
 def test_list_recent_runs_command_and_numeric_order(monkeypatch):
