@@ -1,0 +1,48 @@
+# dotenv / secrets
+.env*
+!.env.example
+
+# version control
+.git/
+.gitignore
+
+# Python virtual environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE / editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI / docs / dev orchestration
+.github/
+.pipeline/
+docs/
+tests/
+docker-compose.yaml
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# JS tooling if any
+node_modules/
+package-lock.json
+yarn.lock
+
+# Misc
+.envrc
+*.log
+.coverage
+htmlcov/
+dist/
+build/
