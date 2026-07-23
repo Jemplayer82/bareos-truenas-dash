@@ -193,3 +193,14 @@ def test_call_failure_maps(monkeypatch):
 
     # close() should still be invoked best-effort.
     assert True
+
+
+def test_invalid_bareos_port_raises_bareos_unavailable(monkeypatch):
+    monkeypatch.setenv("BAREOS_PORT", "9101a")
+    _, _, calls = install(monkeypatch, {})
+
+    with pytest.raises(bareos_client.BareosUnavailable, match="BAREOS_PORT") as exc_info:
+        bareos_client.get_status()
+
+    assert "9101a" in str(exc_info.value)
+    assert calls["count"] == 0

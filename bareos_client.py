@@ -32,7 +32,13 @@ class BareosAuthFailed(BareosError):
 def _config() -> tuple[str, int, str, str]:
     """Return fresh Bareos connection settings from the process environment."""
     host = os.environ.get("BAREOS_HOST", "192.168.1.41")
-    port = int(os.environ.get("BAREOS_PORT", "9101"))
+    raw_port = os.environ.get("BAREOS_PORT", "9101")
+    try:
+        port = int(raw_port)
+    except ValueError as e:
+        raise BareosUnavailable(
+            f"BAREOS_PORT is not a valid integer: {raw_port!r}"
+        ) from e
     name = os.environ.get("BAREOS_CONSOLE_NAME", "dashboard")
     password = os.environ.get("BAREOS_CONSOLE_PASSWORD", "changeme")
     return host, port, name, password
