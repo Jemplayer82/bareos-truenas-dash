@@ -178,8 +178,15 @@ def test_connection_error_maps(monkeypatch):
 
 def test_call_failure_maps(monkeypatch):
     class FailingFake(FakeConsole):
+        def __init__(self, responses: dict[str, dict[str, object]]):
+            super().__init__(responses)
+            self.close_count = 0
+
         def call(self, command: str) -> dict[str, object]:
             raise bareos.exceptions.ConnectionLostError("lost")
+
+        def close(self) -> None:
+            self.close_count += 1
 
     fake = FailingFake({".jobs": {"jobs": []}})
     monkeypatch.setattr(
@@ -191,8 +198,7 @@ def test_call_failure_maps(monkeypatch):
     with pytest.raises(bareos_client.BareosUnavailable):
         bareos_client.list_defined_jobs()
 
-    # close() should still be invoked best-effort.
-    assert True
+    assert fake.close_count == 1
 
 
 def test_invalid_bareos_port_raises_bareos_unavailable(monkeypatch):
