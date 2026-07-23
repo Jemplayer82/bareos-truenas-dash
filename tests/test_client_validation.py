@@ -133,14 +133,23 @@ def test_list_media_flat_passthrough(monkeypatch):
 def test_run_job_command_and_jobid(monkeypatch):
     fake, _, _ = install(
         monkeypatch,
-        {"run job=Nightly yes": {"run": {"jobid": "42"}}},
+        {'run job="Nightly" yes': {"run": {"jobid": "42"}}},
     )
     assert bareos_client.run_job("Nightly") == 42
-    assert fake.commands == ["run job=Nightly yes"]
+    assert fake.commands == ['run job="Nightly" yes']
+
+
+def test_run_job_quotes_name_with_spaces(monkeypatch):
+    fake, _, _ = install(
+        monkeypatch,
+        {'run job="My Job" yes': {"run": {"jobid": "7"}}},
+    )
+    assert bareos_client.run_job("My Job") == 7
+    assert fake.commands == ['run job="My Job" yes']
 
 
 def test_run_job_missing_jobid_raises(monkeypatch):
-    install(monkeypatch, {"run job=Nightly yes": {"run": {}}})
+    install(monkeypatch, {'run job="Nightly" yes': {"run": {}}})
     with pytest.raises(bareos_client.BareosUnavailable):
         bareos_client.run_job("Nightly")
 
@@ -154,6 +163,10 @@ def test_run_job_rejects_injection(monkeypatch):
 
     with pytest.raises(ValueError, match="invalid job name"):
         bareos_client.run_job("")
+    assert calls["count"] == 0
+
+    with pytest.raises(ValueError, match="invalid job name"):
+        bareos_client.run_job('x" inject')
     assert calls["count"] == 0
 
 

@@ -159,12 +159,13 @@ def run_job(name: str) -> int:
 
     The HTTP layer also validates the name against :func:`list_defined_jobs`
     before calling this function; the regex below is a second, defense-in-depth
-    layer that blocks console-command injection.
+    layer that blocks console-command injection. Job names may contain spaces,
+    so the value is quoted in the generated console command.
     """
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_.\- ]+", name):
         raise ValueError("invalid job name")
 
-    data = _call(f"run job={name} yes")
+    data = _call(f'run job="{name}" yes')
     jobid = data.get("run", {}).get("jobid")
     if jobid is None:
         _logger.debug("Bareos run response missing jobid: %r", data)
