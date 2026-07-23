@@ -37,6 +37,8 @@ function errMsg(data) {
   return data.error + (data.details ? ' — ' + data.details : '');
 }
 
+let runInFlight = false;
+
 async function loadStatus() {
   const panel = 'director';
   try {
@@ -59,7 +61,7 @@ async function loadStatus() {
   }
 }
 
-async function loadJobs() {
+async function renderJobs() {
   const panel = 'jobs';
   try {
     const data = await getJSON('/api/jobs');
@@ -101,6 +103,13 @@ async function loadJobs() {
       btn.addEventListener('click', async function (event) {
         const btn = event.currentTarget;
         if (!confirm('Run job ' + name + ' now?')) return;
+        if (runInFlight) {
+          const feedback = document.getElementById('jobs-feedback');
+          feedback.className = 'panel-feedback fail';
+          feedback.textContent = 'error: a run is already in progress';
+          return;
+        }
+        runInFlight = true;
         const feedback = document.getElementById('jobs-feedback');
         btn.disabled = true;
         try {
@@ -121,7 +130,12 @@ async function loadJobs() {
           feedback.className = 'panel-feedback fail';
           feedback.textContent = 'error: fetch failed';
         } finally {
-          btn.disabled = false;
+          try {
+            await renderJobs();
+          } finally {
+            runInFlight = false;
+            btn.disabled = false;
+          }
         }
       });
       row.appendChild(btn);
@@ -133,6 +147,11 @@ async function loadJobs() {
   } finally {
     stamp(panel + '-stamp');
   }
+}
+
+async function loadJobs() {
+  if (runInFlight) return;
+  await renderJobs();
 }
 
 async function loadHistory() {
