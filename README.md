@@ -9,7 +9,7 @@ status without opening bareos-webui.
 - **Run backups on demand** — one button per configured job, straight to the Director
 - **Job status & history** — recent runs, live running jobs, last-good-backup per job
 - **Tape / media view** — volumes, pool, status (Append/Full/Error), last written
-- **Director health** — director + storage daemon status at a glance
+- **Director health** — Director version and console connection state at a glance
 
 > [!NOTE]
 > Bareos itself runs in its own VM (TrueNAS can't host the Director natively). This dashboard is
@@ -22,8 +22,21 @@ status without opening bareos-webui.
 ```bash
 uv sync
 cp .env.example .env   # fill in the Bareos console credential
-uv run flask --app app run --debug
+uv run --env-file .env flask --app app run --debug
 ```
+
+`python-dotenv` is not used — the app reads `os.environ` directly (defaults match `.env.example`; gunicorn/TrueNAS inject real values in production).
+
+## 🔌 API
+
+- `GET /healthz` — liveness, never touches the Director
+- `GET /api/status`
+- `GET /api/jobs` — defined jobs + newest run each
+- `GET /api/history?limit=25`
+- `GET /api/media`
+- `POST /api/run` with body `{"job": "<name>"}` — validated against the Director's own job list before anything is sent
+
+All `/api/*` endpoints always return HTTP 200, with an `error` sentinel field on failure (`director_unreachable`, `auth_failed`, `unknown_job`) plus a `details` string, so the dashboard polls straight through outages.
 
 ## ⚙️ Configuration
 
