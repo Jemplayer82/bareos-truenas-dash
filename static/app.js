@@ -203,7 +203,7 @@ async function loadMedia() {
         row.pool,
         row.status,
         fmtBytes(row.bytes),
-        row.lastwritten,
+        row.lastwritten || '—',
         row.inchanger ? 'yes' : 'no'
       ];
       for (const value of values) {
