@@ -427,8 +427,10 @@ def test_appjs_structure():
     ):
         assert fn in js
     assert "setInterval" in js
-    assert "15000" in js
-    assert "60000" in js
+    assert re.search(r"setInterval\(loadStatus, 15000\)", js)
+    assert re.search(r"setInterval\(loadJobs, 15000\)", js)
+    assert re.search(r"setInterval\(loadHistory, 15000\)", js)
+    assert re.search(r"setInterval\(loadMedia, 60000\)", js)
     assert "confirm(" in js
     for endpoint in ("/api/status", "/api/jobs", "/api/history", "/api/media", "/api/run"):
         assert endpoint in js
