@@ -2,10 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>bareos-truenas-dash</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
-  <!-- placeholder: replaced by the full dashboard -->
-  <main>loading…</main>
+  <header>
+    <h1>[ bareos-truenas-dash ]</h1>
+    <span class="dim">tape backup operations // truenas</span>
+  </header>
+  <main class="grid">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>[ jobs ]</h2>
+        <span class="stamp" id="jobs-stamp"></span>
+      </div>
+      <div class="panel-error" id="jobs-error" hidden></div>
+      <div id="jobs-body"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>[ history ]</h2>
+        <span class="stamp" id="history-stamp"></span>
+      </div>
+      <div class="panel-error" id="history-error" hidden></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>jobid</th>
+              <th>name</th>
+              <th>level</th>
+              <th>start</th>
+              <th>files</th>
+              <th>bytes</th>
+              <th>status</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>[ media ]</h2>
+        <span class="stamp" id="media-stamp"></span>
+      </div>
+      <div class="panel-error" id="media-error" hidden></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>volume</th>
+              <th>pool</th>
+              <th>status</th>
+              <th>bytes</th>
+              <th>last written</th>
+              <th>in-changer</th>
+            </tr>
+          </thead>
+          <tbody id="media-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>[ director ]</h2>
+        <span class="stamp" id="director-stamp"></span>
+      </div>
+      <div class="panel-error" id="director-error" hidden></div>
+      <div id="director-body">
+        <span class="dot" id="director-dot"></span>
+        <span id="director-version">&mdash;</span>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

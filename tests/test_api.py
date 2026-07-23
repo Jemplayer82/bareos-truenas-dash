@@ -316,3 +316,84 @@ def test_run_valueerror_maps_to_unknown_job(client, monkeypatch):
     resp = client.post("/api/run", json={"job": "Nightly"})
     assert resp.status_code == 200
     assert resp.get_json() == {"error": "unknown_job", "details": "invalid job name"}
+
+
+from pathlib import Path
+import re
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_index_panels_and_ids(client):
+    resp = client.get("/")
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    for title in ("[ jobs ]", "[ history ]", "[ media ]", "[ director ]"):
+        assert title in body
+    for pid in (
+        "jobs-body",
+        "history-body",
+        "media-body",
+        "director-body",
+        "jobs-stamp",
+        "history-stamp",
+        "media-stamp",
+        "director-stamp",
+        "jobs-error",
+        "history-error",
+        "media-error",
+        "director-error",
+        "director-dot",
+        "director-version",
+    ):
+        assert pid in body
+    assert "/static/app.js" in body
+    assert "/static/style.css" in body
+
+
+def test_index_external_refs_google_fonts_only():
+    html = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    urls = re.findall(r'https?://[^\s"\'<>]+', html)
+    assert urls
+    for url in urls:
+        assert url.startswith("https://fonts.googleapis.com") or url.startswith("https://fonts.gstatic.com")
+
+
+def test_style_css_palette_and_self_contained():
+    css = (ROOT / "static" / "style.css").read_text(encoding="utf-8")
+    for token in (
+        "#030d14",
+        "#0a1a24",
+        "#16303f",
+        "#6cd5e6",
+        "#00b4d8",
+        "#10b981",
+        "#f59e0b",
+        "#ef4444",
+        "JetBrains Mono",
+    ):
+        assert token in css
+    assert "http" not in css.lower()
+    for sel in (".badge.ok", ".badge.warn", ".badge.fail", ".badge.running", ".dot", ".panel"):
+        assert sel in css
+
+
+def test_appjs_structure():
+    js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    for fn in (
+        "async function loadStatus",
+        "async function loadJobs",
+        "async function loadHistory",
+        "async function loadMedia",
+    ):
+        assert fn in js
+    assert "setInterval" in js
+    assert "15000" in js
+    assert "60000" in js
+    assert "confirm(" in js
+    for endpoint in ("/api/status", "/api/jobs", "/api/history", "/api/media", "/api/run"):
+        assert endpoint in js
+    assert "POST" in js
+    assert re.findall(r"https?://", js) == []
+    assert "innerHTML" not in js
+    assert "refreshed " in js
