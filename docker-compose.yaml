@@ -1,0 +1,7 @@
+services:
+  app:
+    image: ghcr.io/jemplayer82/bareos-truenas-dash:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "5000:5000"

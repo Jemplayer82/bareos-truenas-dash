@@ -1,0 +1,18 @@
+[project]
+name = "bareos-truenas-dash"
+version = "0.1.0"
+description = "Bareos tape-backup dashboard, deployed as a TrueNAS SCALE custom app"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.0",
+    "python-bareos>=23",
+    "gunicorn>=22",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
