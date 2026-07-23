@@ -93,17 +93,15 @@ async function loadJobs() {
       timeSpan.textContent = run && run.starttime ? run.starttime : '—';
       row.appendChild(timeSpan);
 
-      const result = document.createElement('span');
-      result.className = 'run-result';
-      row.appendChild(result);
-
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'run-btn';
       btn.textContent = 'run';
       const name = job.name || '';
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', async function (event) {
+        const btn = event.currentTarget;
         if (!confirm('Run job ' + name + ' now?')) return;
+        const feedback = document.getElementById('jobs-feedback');
         btn.disabled = true;
         try {
           const r = await fetch('/api/run', {
@@ -113,15 +111,15 @@ async function loadJobs() {
           });
           const respData = await r.json();
           if (respData.error) {
-            result.className = 'run-result fail';
-            result.textContent = 'error: ' + respData.error;
+            feedback.className = 'panel-feedback fail';
+            feedback.textContent = 'error: ' + respData.error;
           } else {
-            result.className = 'run-result';
-            result.textContent = 'queued jobid ' + respData.jobid;
+            feedback.className = 'panel-feedback';
+            feedback.textContent = 'queued jobid ' + respData.jobid;
           }
         } catch (err) {
-          result.className = 'run-result fail';
-          result.textContent = 'error: fetch failed';
+          feedback.className = 'panel-feedback fail';
+          feedback.textContent = 'error: fetch failed';
         } finally {
           btn.disabled = false;
         }
