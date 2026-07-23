@@ -107,7 +107,7 @@ def get_status() -> dict[str, Any]:
 def list_defined_jobs() -> list[str]:
     """Return the sorted list of job names defined in the Director."""
     data = _call(".jobs")
-    rows = data.get("jobs", [])
+    rows = data.get("jobs") or []
     names = [
         str(row["name"])
         for row in rows
@@ -119,11 +119,12 @@ def list_defined_jobs() -> list[str]:
 def list_recent_runs(limit: int = 25) -> list[dict[str, Any]]:
     """Return recent job run rows, newest first by numeric jobid."""
     data = _call(f"list jobs last limit={int(limit)}")
-    rows = data.get("jobs", [])
+    rows = data.get("jobs") or []
+    rows = [row for row in rows if isinstance(row, dict)]
 
-    def _jobid_key(row: Any) -> int:
+    def _jobid_key(row: dict[str, Any]) -> int:
         try:
-            return int(row.get("jobid", 0))  # type: ignore[union-attr]
+            return int(row.get("jobid", 0))
         except Exception:
             return 0
 
@@ -150,7 +151,7 @@ def list_media() -> list[dict[str, Any]]:
                     flat.append(volume)
         return flat
     elif isinstance(raw, list):
-        return raw
+        return [row for row in raw if isinstance(row, dict)]
     return []
 
 
@@ -166,7 +167,7 @@ def run_job(name: str) -> int:
         raise ValueError("invalid job name")
 
     data = _call(f'run job="{name}" yes')
-    jobid = data.get("run", {}).get("jobid")
+    jobid = (data.get("run") or {}).get("jobid")
     if jobid is None:
         _logger.debug("Bareos run response missing jobid: %r", data)
         raise BareosUnavailable("no jobid in run response")
