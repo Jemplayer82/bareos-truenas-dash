@@ -9,12 +9,16 @@ environment.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import Any
 
 import bareos.exceptions
 from bareos.bsock import DirectorConsoleJson
+
+
+_logger = logging.getLogger(__name__)
 
 
 class BareosError(Exception):
@@ -163,5 +167,6 @@ def run_job(name: str) -> int:
     data = _call(f"run job={name} yes")
     jobid = data.get("run", {}).get("jobid")
     if jobid is None:
-        raise BareosUnavailable(f"no jobid in run response: {data!r}")
+        _logger.debug("Bareos run response missing jobid: %r", data)
+        raise BareosUnavailable("no jobid in run response")
     return int(jobid)

@@ -33,9 +33,25 @@ def api_guard(fn: Callable[..., Any]) -> Callable[..., Any]:
         try:
             return fn(*args, **kwargs)
         except bareos_client.BareosAuthFailed as e:
-            return jsonify({"error": "auth_failed", "details": str(e)})
+            app.logger.warning(
+                "BareosAuthFailed in %s: %s", fn.__name__, e, exc_info=True
+            )
+            return jsonify(
+                {
+                    "error": "auth_failed",
+                    "details": "Authentication with the Bareos Director failed.",
+                }
+            )
         except bareos_client.BareosError as e:
-            return jsonify({"error": "director_unreachable", "details": str(e)})
+            app.logger.warning(
+                "BareosError in %s: %s", fn.__name__, e, exc_info=True
+            )
+            return jsonify(
+                {
+                    "error": "director_unreachable",
+                    "details": "The Bareos Director is unreachable.",
+                }
+            )
     return wrapper
 
 
@@ -155,8 +171,13 @@ def run() -> Any:
 
     try:
         jobid = bareos_client.run_job(name)
-    except ValueError as e:
-        return jsonify({"error": "unknown_job", "details": str(e)})
+    except ValueError:
+        return jsonify(
+            {
+                "error": "unknown_job",
+                "details": "The requested job could not be started.",
+            }
+        )
 
     return jsonify({"jobid": jobid, "job": name})
 

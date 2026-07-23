@@ -52,10 +52,12 @@ def test_status_unreachable(client, monkeypatch):
     monkeypatch.setattr(bareos_client, "get_status", boom)
     resp = client.get("/api/status")
     assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
     assert resp.get_json() == {
         "error": "director_unreachable",
-        "details": "conn refused",
+        "details": "The Bareos Director is unreachable.",
     }
+    assert "conn refused" not in body
 
 
 def test_status_auth_failed(client, monkeypatch):
@@ -65,7 +67,12 @@ def test_status_auth_failed(client, monkeypatch):
     monkeypatch.setattr(bareos_client, "get_status", boom)
     resp = client.get("/api/status")
     assert resp.status_code == 200
-    assert resp.get_json() == {"error": "auth_failed", "details": "bad md5"}
+    body = resp.get_data(as_text=True)
+    assert resp.get_json() == {
+        "error": "auth_failed",
+        "details": "Authentication with the Bareos Director failed.",
+    }
+    assert "bad md5" not in body
 
 
 @pytest.mark.parametrize(
@@ -142,7 +149,12 @@ def test_jobs_unreachable(client, monkeypatch):
     monkeypatch.setattr(bareos_client, "list_defined_jobs", boom)
     resp = client.get("/api/jobs")
     assert resp.status_code == 200
-    assert resp.get_json() == {"error": "director_unreachable", "details": "down"}
+    body = resp.get_data(as_text=True)
+    assert resp.get_json() == {
+        "error": "director_unreachable",
+        "details": "The Bareos Director is unreachable.",
+    }
+    assert "down" not in body
 
 
 def test_history_limits(client, monkeypatch):
@@ -175,7 +187,11 @@ def test_history_auth_failed(client, monkeypatch):
     monkeypatch.setattr(bareos_client, "list_recent_runs", boom)
     resp = client.get("/api/history")
     assert resp.status_code == 200
-    assert resp.get_json()["error"] == "auth_failed"
+    body = resp.get_data(as_text=True)
+    data = resp.get_json()
+    assert data["error"] == "auth_failed"
+    assert data["details"] == "Authentication with the Bareos Director failed."
+    assert "rejected" not in body
 
 
 def test_media_normalization(client, monkeypatch):
@@ -232,7 +248,11 @@ def test_media_unreachable(client, monkeypatch):
     monkeypatch.setattr(bareos_client, "list_media", boom)
     resp = client.get("/api/media")
     assert resp.status_code == 200
-    assert resp.get_json()["error"] == "director_unreachable"
+    body = resp.get_data(as_text=True)
+    data = resp.get_json()
+    assert data["error"] == "director_unreachable"
+    assert data["details"] == "The Bareos Director is unreachable."
+    assert "boom" not in body
 
 
 def test_run_happy(client, monkeypatch):
@@ -289,7 +309,12 @@ def test_run_director_down_during_validation(client, monkeypatch):
 
     resp = client.post("/api/run", json={"job": "Nightly"})
     assert resp.status_code == 200
-    assert resp.get_json() == {"error": "director_unreachable", "details": "down"}
+    body = resp.get_data(as_text=True)
+    assert resp.get_json() == {
+        "error": "director_unreachable",
+        "details": "The Bareos Director is unreachable.",
+    }
+    assert "down" not in body
 
 
 def test_run_auth_failed_on_run(client, monkeypatch):
@@ -302,7 +327,12 @@ def test_run_auth_failed_on_run(client, monkeypatch):
 
     resp = client.post("/api/run", json={"job": "Nightly"})
     assert resp.status_code == 200
-    assert resp.get_json() == {"error": "auth_failed", "details": "denied"}
+    body = resp.get_data(as_text=True)
+    assert resp.get_json() == {
+        "error": "auth_failed",
+        "details": "Authentication with the Bareos Director failed.",
+    }
+    assert "denied" not in body
 
 
 def test_run_valueerror_maps_to_unknown_job(client, monkeypatch):
@@ -315,7 +345,12 @@ def test_run_valueerror_maps_to_unknown_job(client, monkeypatch):
 
     resp = client.post("/api/run", json={"job": "Nightly"})
     assert resp.status_code == 200
-    assert resp.get_json() == {"error": "unknown_job", "details": "invalid job name"}
+    body = resp.get_data(as_text=True)
+    assert resp.get_json() == {
+        "error": "unknown_job",
+        "details": "The requested job could not be started.",
+    }
+    assert "invalid job name" not in body
 
 
 from pathlib import Path
