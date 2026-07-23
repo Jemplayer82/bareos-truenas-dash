@@ -1,15 +1,14 @@
 function fmtBytes(n) {
   const v = Number(n);
   if (!isFinite(v)) return '—';
-  if (v < 1024) return v + ' B';
-  const units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
   let val = v;
   let i = 0;
   while (i < units.length - 1 && val >= 1024) {
     val /= 1024;
     i++;
   }
-  return val.toFixed(1) + ' ' + units[i];
+  return (i === 0 ? String(Math.round(val)) : val.toFixed(1)) + ' ' + units[i];
 }
 
 function stamp(id) {

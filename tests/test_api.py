@@ -438,3 +438,11 @@ def test_appjs_structure():
     assert re.findall(r"https?://", js) == []
     assert "innerHTML" not in js
     assert "refreshed " in js
+
+
+def test_appjs_fmtbytes_units_ladder():
+    js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    assert re.search(
+        r"const\s+units\s*=\s*\[\s*['\"]B['\"]\s*,\s*['\"]KiB['\"]\s*,\s*['\"]MiB['\"]",
+        js,
+    )
